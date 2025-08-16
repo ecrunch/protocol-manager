@@ -1,0 +1,230 @@
+# Notion Python Client - Cursor Rules
+
+## Project Overview
+You are working on a Python client for the Notion API that can manage entire pages and access all available Notion API endpoints. This client should be robust, well-structured, and provide comprehensive coverage of Notion's capabilities.
+
+## Core Technologies & Dependencies
+- **Python Version**: 3.8+
+- **Primary Libraries**: 
+  - `requests` or `httpx` for HTTP requests
+  - `pydantic` for data validation and serialization
+  - `python-dotenv` for environment management
+  - `typing` for type hints
+  - `dataclasses` or `pydantic.BaseModel` for data structures
+- **Optional Libraries**:
+  - `aiohttp` or `httpx` for async support
+  - `rich` for CLI output formatting
+  - `click` or `typer` for CLI interface
+
+## Project Structure
+```
+notion_client/
+├── __init__.py
+├── client.py              # Main NotionClient class
+├── auth.py               # Authentication handling
+├── exceptions.py         # Custom exceptions
+├── models/
+│   ├── __init__.py
+│   ├── base.py          # Base model classes
+│   ├── page.py          # Page-related models
+│   ├── block.py         # Block-related models
+│   ├── database.py      # Database-related models
+│   ├── user.py          # User-related models
+│   └── property.py      # Property-related models
+├── endpoints/
+│   ├── __init__.py
+│   ├── pages.py         # Page operations
+│   ├── blocks.py        # Block operations
+│   ├── databases.py     # Database operations
+│   ├── users.py         # User operations
+│   └── search.py        # Search operations
+├── utils/
+│   ├── __init__.py
+│   ├── helpers.py       # Utility functions
+│   └── validators.py    # Input validation
+└── cli.py               # Command-line interface (optional)
+```
+
+## Coding Standards & Style
+
+### General Guidelines
+- Follow PEP 8 style guide strictly
+- Use type hints for all function parameters and return types
+- Write comprehensive docstrings in Google format
+- Implement proper error handling with custom exceptions
+- Use logging instead of print statements
+- All classes and functions must have docstrings
+
+### Type Hinting
+```python
+from typing import Dict, List, Optional, Union, Any, Literal
+from pydantic import BaseModel
+
+def get_page(page_id: str) -> Dict[str, Any]:
+    """Get a page by ID."""
+    pass
+```
+
+### Error Handling
+- Create custom exceptions for different API error scenarios
+- Always handle rate limiting (429 responses)
+- Implement retry logic with exponential backoff
+- Validate inputs before making API calls
+
+### Data Models
+Use Pydantic models for all API request/response data:
+```python
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime
+
+class NotionPage(BaseModel):
+    id: str
+    created_time: datetime
+    last_edited_time: datetime
+    title: Optional[str] = None
+    properties: Dict[str, Any] = Field(default_factory=dict)
+```
+
+## Notion API Implementation Requirements
+
+### Authentication
+- Support both Integration Token and OAuth 2.0
+- Store credentials securely using environment variables
+- Implement token refresh logic for OAuth
+
+### Core API Coverage
+Ensure complete implementation of all Notion API endpoints:
+
+**Pages API:**
+- `POST /v1/pages` - Create a page
+- `PATCH /v1/pages/{page_id}` - Update page properties
+- `GET /v1/pages/{page_id}` - Retrieve a page
+- `GET /v1/pages/{page_id}/property/{property_id}` - Retrieve page property
+
+**Blocks API:**
+- `GET /v1/blocks/{block_id}` - Retrieve a block
+- `PATCH /v1/blocks/{block_id}` - Update a block
+- `DELETE /v1/blocks/{block_id}` - Delete a block
+- `GET /v1/blocks/{block_id}/children` - Retrieve block children
+- `PATCH /v1/blocks/{block_id}/children` - Append block children
+
+**Databases API:**
+- `POST /v1/databases` - Create a database
+- `GET /v1/databases/{database_id}` - Retrieve a database
+- `PATCH /v1/databases/{database_id}` - Update a database
+- `POST /v1/databases/{database_id}/query` - Query a database
+
+**Users API:**
+- `GET /v1/users` - List all users
+- `GET /v1/users/{user_id}` - Retrieve a user
+- `GET /v1/users/me` - Retrieve current user
+
+**Search API:**
+- `POST /v1/search` - Search pages and databases
+
+**Comments API:**
+- `GET /v1/comments` - Retrieve comments
+- `POST /v1/comments` - Create comment
+
+### Rate Limiting & Request Handling
+- Implement rate limiting (3 requests per second average)
+- Add retry logic with exponential backoff
+- Support pagination for all list endpoints
+- Handle Notion API versioning (use version 2022-06-28 or latest)
+
+## Client Architecture
+
+### Main Client Class
+```python
+class NotionClient:
+    def __init__(self, auth_token: str, notion_version: str = "2022-06-28"):
+        """Initialize Notion client with authentication."""
+        
+    # Property accessors for different API sections
+    @property
+    def pages(self) -> PagesEndpoint:
+        """Access to Pages API endpoints."""
+        
+    @property  
+    def blocks(self) -> BlocksEndpoint:
+        """Access to Blocks API endpoints."""
+        
+    @property
+    def databases(self) -> DatabasesEndpoint:
+        """Access to Databases API endpoints."""
+```
+
+### Page Management Features
+Implement comprehensive page management:
+- Create, read, update, delete pages
+- Manage page properties (title, rich text, numbers, dates, etc.)
+- Handle page hierarchies and relationships
+- Support all block types (paragraphs, headers, lists, images, etc.)
+- Bulk operations for efficiency
+
+### Advanced Features
+- **Page Templates**: Support for creating pages from templates
+- **Bulk Operations**: Batch create/update/delete operations
+- **Export/Import**: Convert pages to/from common formats (Markdown, HTML)
+- **Async Support**: Optional async implementation for high-performance scenarios
+- **Caching**: Implement intelligent caching for frequently accessed data
+
+## Testing Requirements
+- Unit tests for all major functions
+- Integration tests with actual Notion API (using test workspace)
+- Mock tests for offline development
+- Test error scenarios and edge cases
+- Performance tests for bulk operations
+
+## Configuration & Environment
+```python
+# Required environment variables
+NOTION_API_TOKEN=your_integration_token
+NOTION_API_VERSION=2022-06-28
+
+# Optional configuration
+NOTION_REQUEST_TIMEOUT=30
+NOTION_MAX_RETRIES=3
+NOTION_RATE_LIMIT_DELAY=1.0
+```
+
+## Documentation Requirements
+- Comprehensive README with setup instructions
+- API reference documentation
+- Usage examples for common scenarios
+- Migration guides for API version updates
+- Contributing guidelines
+
+## Performance Considerations
+- Implement connection pooling for HTTP requests
+- Use async/await for concurrent operations when possible
+- Cache frequently accessed metadata
+- Implement efficient pagination handling
+- Minimize API calls through intelligent batching
+
+## Security Guidelines
+- Never log or expose API tokens
+- Validate all user inputs
+- Use secure methods for credential storage
+- Implement proper access control in multi-user scenarios
+- Follow OWASP security guidelines
+
+## Code Quality Tools
+Integrate these tools in development workflow:
+- `black` for code formatting
+- `isort` for import sorting
+- `flake8` or `ruff` for linting
+- `mypy` for static type checking
+- `pytest` for testing
+- `pre-commit` hooks for automated checks
+
+## API Response Handling
+Always handle Notion API responses properly:
+- Parse response status codes appropriately
+- Extract and use pagination cursors
+- Handle partial failures in bulk operations
+- Implement proper error messages for users
+- Log API interactions for debugging
+
+Remember: The Notion API has specific data structures and requirements. Always refer to the official Notion API documentation for the most current specifications and ensure your implementation handles all edge cases and error conditions gracefully.
