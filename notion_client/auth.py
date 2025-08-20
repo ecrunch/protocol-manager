@@ -63,9 +63,6 @@ class IntegrationAuth(NotionAuth):
         
         self.token = token.strip()
         
-        # Validate token format (starts with secret_)
-        if not self.token.startswith("secret_"):
-            logger.warning("Integration token does not start with 'secret_'")
     
     def get_headers(self) -> Dict[str, str]:
         """Get headers for integration token authentication.

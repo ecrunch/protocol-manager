@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.cursorrules
 
 # C extensions
 *.so
@@ -143,3 +144,5 @@ Thumbs.db
 test_output/
 temp/
 tmp/
+.cursorrules
+.cursorrules

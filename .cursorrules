@@ -1,230 +1,437 @@
-# Notion Python Client - Cursor Rules
+# Protocol Manager - LangChain AI Agent Integration
 
 ## Project Overview
-You are working on a Python client for the Notion API that can manage entire pages and access all available Notion API endpoints. This client should be robust, well-structured, and provide comprehensive coverage of Notion's capabilities.
+This project combines a comprehensive Notion Python client with LangChain-powered AI agents that can intelligently manage goals, schedules, and todos. The AI agent uses OpenAI's API to understand natural language requests and automatically interact with Notion to create, update, and manage productivity workflows.
 
-## Core Technologies & Dependencies
-- **Python Version**: 3.8+
-- **Primary Libraries**: 
-  - `requests` or `httpx` for HTTP requests
-  - `pydantic` for data validation and serialization
-  - `python-dotenv` for environment management
-  - `typing` for type hints
-  - `dataclasses` or `pydantic.BaseModel` for data structures
-- **Optional Libraries**:
-  - `aiohttp` or `httpx` for async support
-  - `rich` for CLI output formatting
-  - `click` or `typer` for CLI interface
-
-## Project Structure
+## Architecture Overview
 ```
-notion_client/
-├── __init__.py
-├── client.py              # Main NotionClient class
-├── auth.py               # Authentication handling
-├── exceptions.py         # Custom exceptions
-├── models/
+protocol_manager/
+├── notion_client/          # Existing Notion client (completed)
+├── notion_client_examples/ # Existing Notion client examples (completed)
+├── agents/                 # LangChain AI agents
 │   ├── __init__.py
-│   ├── base.py          # Base model classes
-│   ├── page.py          # Page-related models
-│   ├── block.py         # Block-related models
-│   ├── database.py      # Database-related models
-│   ├── user.py          # User-related models
-│   └── property.py      # Property-related models
-├── endpoints/
+│   ├── base_agent.py      # Base agent class
+│   ├── goal_agent.py      # Goal management agent
+│   ├── schedule_agent.py  # Schedule management agent
+│   ├── todo_agent.py      # Todo management agent
+│   └── coordinator.py     # Multi-agent coordinator
+├── tools/                  # LangChain tools for Notion operations
 │   ├── __init__.py
-│   ├── pages.py         # Page operations
-│   ├── blocks.py        # Block operations
-│   ├── databases.py     # Database operations
-│   ├── users.py         # User operations
-│   └── search.py        # Search operations
-├── utils/
+│   ├── base_tool.py       # Base tool class
+│   ├── goal_tools.py      # Goal-related tools
+│   ├── schedule_tools.py  # Schedule-related tools
+│   └── todo_tools.py      # Todo-related tools
+├── prompts/               # Agent prompts and templates
 │   ├── __init__.py
-│   ├── helpers.py       # Utility functions
-│   └── validators.py    # Input validation
-└── cli.py               # Command-line interface (optional)
+│   ├── system_prompts.py  # System prompts for agents
+│   ├── goal_prompts.py    # Goal management prompts
+│   ├── schedule_prompts.py# Schedule management prompts
+│   └── todo_prompts.py    # Todo management prompts
+├── memory/                # Agent memory and context management
+│   ├── __init__.py
+│   ├── conversation.py    # Conversation memory
+│   └── context.py         # Context management
+├── integrations/          # External integrations
+│   ├── __init__.py
+│   ├── calendar.py        # Calendar integrations
+│   └── notifications.py  # Notification system
+└── cli/                   # Command-line interface
+    ├── __init__.py
+    └── main.py           # Main CLI entry point
 ```
 
-## Coding Standards & Style
+## Core Dependencies
+### Existing Dependencies (from Notion client)
+- `requests` or `httpx` for HTTP requests
+- `pydantic` for data validation
+- `python-dotenv` for environment management
 
-### General Guidelines
-- Follow PEP 8 style guide strictly
-- Use type hints for all function parameters and return types
-- Write comprehensive docstrings in Google format
-- Implement proper error handling with custom exceptions
-- Use logging instead of print statements
-- All classes and functions must have docstrings
+### New LangChain Dependencies
+- `langchain>=0.1.0` - Core LangChain framework
+- `langchain-openai>=0.0.5` - OpenAI integration
+- `langchain-community` - Community tools and integrations
+- `langchain-experimental` - Experimental features
+- `openai>=1.0.0` - OpenAI Python client
+- `tiktoken` - Token counting for OpenAI models
 
-### Type Hinting
-```python
-from typing import Dict, List, Optional, Union, Any, Literal
-from pydantic import BaseModel
+### Additional Dependencies
+- `click` or `typer` - CLI interface
+- `rich` - Rich text formatting for CLI
+- `python-crontab` - Cron scheduling
+- `apscheduler` - Advanced Python scheduler
+- `sqlalchemy` - Database ORM for agent memory
+- `chromadb` or `faiss-cpu` - Vector database for semantic search
 
-def get_page(page_id: str) -> Dict[str, Any]:
-    """Get a page by ID."""
-    pass
-```
-
-### Error Handling
-- Create custom exceptions for different API error scenarios
-- Always handle rate limiting (429 responses)
-- Implement retry logic with exponential backoff
-- Validate inputs before making API calls
-
-### Data Models
-Use Pydantic models for all API request/response data:
-```python
-from pydantic import BaseModel, Field
-from typing import Optional, List
-from datetime import datetime
-
-class NotionPage(BaseModel):
-    id: str
-    created_time: datetime
-    last_edited_time: datetime
-    title: Optional[str] = None
-    properties: Dict[str, Any] = Field(default_factory=dict)
-```
-
-## Notion API Implementation Requirements
-
-### Authentication
-- Support both Integration Token and OAuth 2.0
-- Store credentials securely using environment variables
-- Implement token refresh logic for OAuth
-
-### Core API Coverage
-Ensure complete implementation of all Notion API endpoints:
-
-**Pages API:**
-- `POST /v1/pages` - Create a page
-- `PATCH /v1/pages/{page_id}` - Update page properties
-- `GET /v1/pages/{page_id}` - Retrieve a page
-- `GET /v1/pages/{page_id}/property/{property_id}` - Retrieve page property
-
-**Blocks API:**
-- `GET /v1/blocks/{block_id}` - Retrieve a block
-- `PATCH /v1/blocks/{block_id}` - Update a block
-- `DELETE /v1/blocks/{block_id}` - Delete a block
-- `GET /v1/blocks/{block_id}/children` - Retrieve block children
-- `PATCH /v1/blocks/{block_id}/children` - Append block children
-
-**Databases API:**
-- `POST /v1/databases` - Create a database
-- `GET /v1/databases/{database_id}` - Retrieve a database
-- `PATCH /v1/databases/{database_id}` - Update a database
-- `POST /v1/databases/{database_id}/query` - Query a database
-
-**Users API:**
-- `GET /v1/users` - List all users
-- `GET /v1/users/{user_id}` - Retrieve a user
-- `GET /v1/users/me` - Retrieve current user
-
-**Search API:**
-- `POST /v1/search` - Search pages and databases
-
-**Comments API:**
-- `GET /v1/comments` - Retrieve comments
-- `POST /v1/comments` - Create comment
-
-### Rate Limiting & Request Handling
-- Implement rate limiting (3 requests per second average)
-- Add retry logic with exponential backoff
-- Support pagination for all list endpoints
-- Handle Notion API versioning (use version 2022-06-28 or latest)
-
-## Client Architecture
-
-### Main Client Class
-```python
-class NotionClient:
-    def __init__(self, auth_token: str, notion_version: str = "2022-06-28"):
-        """Initialize Notion client with authentication."""
-        
-    # Property accessors for different API sections
-    @property
-    def pages(self) -> PagesEndpoint:
-        """Access to Pages API endpoints."""
-        
-    @property  
-    def blocks(self) -> BlocksEndpoint:
-        """Access to Blocks API endpoints."""
-        
-    @property
-    def databases(self) -> DatabasesEndpoint:
-        """Access to Databases API endpoints."""
-```
-
-### Page Management Features
-Implement comprehensive page management:
-- Create, read, update, delete pages
-- Manage page properties (title, rich text, numbers, dates, etc.)
-- Handle page hierarchies and relationships
-- Support all block types (paragraphs, headers, lists, images, etc.)
-- Bulk operations for efficiency
-
-### Advanced Features
-- **Page Templates**: Support for creating pages from templates
-- **Bulk Operations**: Batch create/update/delete operations
-- **Export/Import**: Convert pages to/from common formats (Markdown, HTML)
-- **Async Support**: Optional async implementation for high-performance scenarios
-- **Caching**: Implement intelligent caching for frequently accessed data
-
-## Testing Requirements
-- Unit tests for all major functions
-- Integration tests with actual Notion API (using test workspace)
-- Mock tests for offline development
-- Test error scenarios and edge cases
-- Performance tests for bulk operations
-
-## Configuration & Environment
-```python
-# Required environment variables
-NOTION_API_TOKEN=your_integration_token
+## Environment Configuration
+```bash
+# Existing Notion configuration
+NOTION_API_TOKEN=ntn_your_integration_token_here
 NOTION_API_VERSION=2022-06-28
 
-# Optional configuration
-NOTION_REQUEST_TIMEOUT=30
-NOTION_MAX_RETRIES=3
-NOTION_RATE_LIMIT_DELAY=1.0
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-5-mini  # or gpt-3.5-turbo for cost efficiency
+OPENAI_TEMPERATURE=0.1  # Lower for more consistent responses
+
+# Agent Configuration
+AGENT_MAX_ITERATIONS=10
+AGENT_MEMORY_DURATION_DAYS=30
+AGENT_DEBUG_MODE=false
+
+# Database Configuration (for agent memory)
+DATABASE_URL=sqlite:///./protocol_manager.db
+
+# Optional: External Integrations
+GOOGLE_CALENDAR_CREDENTIALS_PATH=./credentials.json
+SLACK_BOT_TOKEN=xoxb-your-slack-token
 ```
 
-## Documentation Requirements
-- Comprehensive README with setup instructions
-- API reference documentation
-- Usage examples for common scenarios
-- Migration guides for API version updates
-- Contributing guidelines
+## LangChain Agent Implementation
 
-## Performance Considerations
-- Implement connection pooling for HTTP requests
-- Use async/await for concurrent operations when possible
-- Cache frequently accessed metadata
-- Implement efficient pagination handling
-- Minimize API calls through intelligent batching
+### Base Agent Structure
+```python
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_openai import ChatOpenAI
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.schema import SystemMessage
+from notion_client import NotionClient
 
-## Security Guidelines
-- Never log or expose API tokens
-- Validate all user inputs
-- Use secure methods for credential storage
-- Implement proper access control in multi-user scenarios
-- Follow OWASP security guidelines
+class BaseProtocolAgent:
+    """Base class for all protocol management agents."""
+    
+    def __init__(
+        self,
+        notion_client: NotionClient,
+        openai_api_key: str,
+        model_name: str = "gpt-4",
+        temperature: float = 0.1,
+    ):
+        self.notion = notion_client
+        self.llm = ChatOpenAI(
+            api_key=openai_api_key,
+            model=model_name,
+            temperature=temperature
+        )
+        self.memory = ConversationBufferWindowMemory(
+            memory_key="chat_history",
+            return_messages=True,
+            k=10  # Remember last 10 interactions
+        )
+        self.tools = self._setup_tools()
+        self.agent = self._create_agent()
+        
+    def _setup_tools(self) -> List[BaseTool]:
+        """Override in subclasses to define specific tools."""
+        raise NotImplementedError
+        
+    def _create_agent(self) -> AgentExecutor:
+        """Create the LangChain agent with tools and memory."""
+        agent = create_openai_tools_agent(
+            llm=self.llm,
+            tools=self.tools,
+            prompt=self._get_system_prompt()
+        )
+        return AgentExecutor(
+            agent=agent,
+            tools=self.tools,
+            memory=self.memory,
+            verbose=True,
+            max_iterations=10,
+            handle_parsing_errors=True
+        )
+```
 
-## Code Quality Tools
-Integrate these tools in development workflow:
-- `black` for code formatting
-- `isort` for import sorting
-- `flake8` or `ruff` for linting
-- `mypy` for static type checking
-- `pytest` for testing
-- `pre-commit` hooks for automated checks
+### Goal Management Agent
+Focus on long-term objectives and milestone tracking:
+- Create and update goal hierarchies in Notion
+- Break down large goals into actionable tasks
+- Track progress and suggest adjustments
+- Generate progress reports and insights
 
-## API Response Handling
-Always handle Notion API responses properly:
-- Parse response status codes appropriately
-- Extract and use pagination cursors
-- Handle partial failures in bulk operations
-- Implement proper error messages for users
-- Log API interactions for debugging
+```python
+class GoalAgent(BaseProtocolAgent):
+    """Agent specialized in goal setting and management."""
+    
+    def _get_system_prompt(self) -> str:
+        return """You are a goal management expert AI assistant. Your role is to help users:
+        1. Set clear, measurable, and achievable goals
+        2. Break down large goals into smaller, actionable milestones
+        3. Track progress and suggest course corrections
+        4. Celebrate achievements and learn from setbacks
+        
+        You have access to Notion tools to create, update, and manage goal pages and databases.
+        Always ask clarifying questions to ensure goals are SMART (Specific, Measurable, Achievable, Relevant, Time-bound).
+        """
+```
 
-Remember: The Notion API has specific data structures and requirements. Always refer to the official Notion API documentation for the most current specifications and ensure your implementation handles all edge cases and error conditions gracefully.
+### Schedule Management Agent
+Handle time-based planning and calendar management:
+- Create and manage calendar events in Notion
+- Suggest optimal time blocks for tasks
+- Handle scheduling conflicts and rescheduling
+- Integrate with external calendars when possible
+
+```python
+class ScheduleAgent(BaseProtocolAgent):
+    """Agent specialized in schedule and time management."""
+    
+    def _get_system_prompt(self) -> str:
+        return """You are a schedule management expert AI assistant. Your role is to help users:
+        1. Plan and organize their daily, weekly, and monthly schedules
+        2. Optimize time allocation for maximum productivity
+        3. Handle scheduling conflicts and suggest alternatives
+        4. Balance work, personal time, and rest
+        
+        You have access to Notion tools to manage calendar pages and scheduling databases.
+        Consider time zones, work patterns, and personal preferences when making recommendations.
+        """
+```
+
+### Todo Management Agent
+Handle task creation, prioritization, and completion:
+- Create and organize todo items with proper priorities
+- Suggest task breakdowns for complex items
+- Track completion rates and productivity patterns
+- Handle recurring tasks and reminders
+
+```python
+class TodoAgent(BaseProtocolAgent):
+    """Agent specialized in todo and task management."""
+    
+    def _get_system_prompt(self) -> str:
+        return """You are a task management expert AI assistant. Your role is to help users:
+        1. Create, organize, and prioritize todo items
+        2. Break down complex tasks into manageable steps
+        3. Track completion and identify productivity patterns
+        4. Suggest improvements to task management workflows
+        
+        You have access to Notion tools to manage todo databases and task pages.
+        Use priority frameworks like Eisenhower Matrix when appropriate.
+        """
+```
+
+## LangChain Tools Implementation
+
+### Notion Integration Tools
+Create specialized tools that wrap your existing Notion client functionality:
+
+```python
+from langchain.tools import BaseTool
+from typing import Type, Optional
+from pydantic import BaseModel, Field
+
+class CreateGoalTool(BaseTool):
+    """Tool for creating goals in Notion."""
+    name = "create_goal"
+    description = "Create a new goal in the goals database"
+    notion_client: NotionClient = Field(exclude=True)
+    
+    class CreateGoalInput(BaseModel):
+        title: str = Field(description="Goal title")
+        description: str = Field(description="Goal description")
+        target_date: Optional[str] = Field(description="Target completion date (YYYY-MM-DD)")
+        priority: str = Field(description="Priority level (High/Medium/Low)")
+        category: str = Field(description="Goal category")
+    
+    args_schema: Type[BaseModel] = CreateGoalInput
+    
+    def _run(self, title: str, description: str, target_date: str = None, 
+             priority: str = "Medium", category: str = "Personal") -> str:
+        """Create a goal in Notion and return the page ID."""
+        try:
+            # Use your existing Notion client to create the goal
+            goal_page = self.notion_client.pages.create(
+                parent={"database_id": self.goals_database_id},
+                properties={
+                    "Name": {"title": [{"text": {"content": title}}]},
+                    "Description": {"rich_text": [{"text": {"content": description}}]},
+                    "Priority": {"select": {"name": priority}},
+                    "Category": {"select": {"name": category}},
+                    "Status": {"select": {"name": "Not Started"}},
+                    # Add target_date if provided
+                }
+            )
+            return f"Created goal '{title}' with ID: {goal_page['id']}"
+        except Exception as e:
+            return f"Error creating goal: {str(e)}"
+```
+
+### Tool Categories
+Implement comprehensive tool sets for each agent:
+
+**Goal Tools:**
+- `create_goal` - Create new goals
+- `update_goal` - Update existing goals
+- `get_goals` - Retrieve goals with filters
+- `archive_goal` - Archive completed goals
+- `get_goal_progress` - Calculate progress metrics
+
+**Schedule Tools:**
+- `create_event` - Create calendar events
+- `update_event` - Modify existing events
+- `get_schedule` - Retrieve schedule for date range
+- `find_free_time` - Find available time slots
+- `schedule_task` - Schedule tasks in calendar
+
+**Todo Tools:**
+- `create_todo` - Create new todo items
+- `update_todo` - Update todo status/details
+- `get_todos` - Retrieve todos with filters
+- `complete_todo` - Mark todos as complete
+- `prioritize_todos` - Re-prioritize todo list
+
+## Multi-Agent Coordination
+
+### Agent Coordinator
+Implement a coordinator that can route requests to appropriate agents and handle cross-domain tasks:
+
+```python
+class ProtocolCoordinator:
+    """Coordinates multiple agents for complex workflows."""
+    
+    def __init__(self, notion_client: NotionClient, openai_api_key: str):
+        self.notion = notion_client
+        self.goal_agent = GoalAgent(notion_client, openai_api_key)
+        self.schedule_agent = ScheduleAgent(notion_client, openai_api_key)
+        self.todo_agent = TodoAgent(notion_client, openai_api_key)
+        
+    async def process_request(self, user_input: str) -> str:
+        """Route user requests to appropriate agents."""
+        # Use intent classification to determine which agent(s) to use
+        intent = await self._classify_intent(user_input)
+        
+        if intent == "goal_management":
+            return await self.goal_agent.process(user_input)
+        elif intent == "schedule_management":
+            return await self.schedule_agent.process(user_input)
+        elif intent == "todo_management":
+            return await self.todo_agent.process(user_input)
+        elif intent == "multi_domain":
+            return await self._handle_multi_domain_request(user_input)
+        else:
+            return "I'm not sure how to help with that. Can you be more specific?"
+```
+
+## Advanced Features
+
+### Natural Language Processing
+- Intent classification for routing requests
+- Entity extraction for dates, priorities, categories
+- Sentiment analysis for progress tracking
+- Context awareness across conversations
+
+### Automation & Workflows
+- Automated goal progress updates
+- Recurring task creation
+- Deadline reminders and notifications
+- Weekly/monthly review generation
+
+### Intelligence & Learning
+- Pattern recognition in productivity habits
+- Personalized recommendations
+- Adaptive scheduling based on completion rates
+- Learning from user feedback
+
+### Integration Capabilities
+- Google Calendar sync
+- Slack notifications
+- Email reminders
+- Mobile app connectivity
+
+## CLI Interface
+
+### Command Structure
+```bash
+# Goal management
+protocol goal create "Learn Python" --priority high --deadline "2024-12-31"
+protocol goal update "goal-id" --status "In Progress"
+protocol goal list --status active
+
+# Schedule management  
+protocol schedule add "Team meeting" --date "2024-03-15" --time "14:00"
+protocol schedule view --date "2024-03-15"
+protocol schedule optimize --week
+
+# Todo management
+protocol todo add "Review code" --priority urgent --project "web-app"
+protocol todo complete "todo-id"
+protocol todo list --today
+
+# AI assistant mode
+protocol chat
+> "Help me plan my week based on my current goals"
+> "Create a todo for preparing the presentation and schedule time for it"
+```
+
+## Testing Strategy
+
+### Unit Tests
+- Test individual tools and their Notion interactions
+- Mock OpenAI API responses for consistent testing
+- Validate agent decision-making logic
+
+### Integration Tests
+- End-to-end workflows with real Notion workspace
+- Multi-agent coordination scenarios
+- Error handling and recovery
+
+### Performance Tests
+- Response time optimization
+- Memory usage monitoring
+- Rate limiting compliance
+
+## Security & Privacy
+
+### API Key Management
+- Secure environment variable handling
+- Key rotation strategies
+- Audit logging for API usage
+
+### Data Privacy
+- Local storage of conversation history
+- User consent for data processing
+- Anonymization of sensitive information
+
+### Access Control
+- Role-based permissions for Notion access
+- User authentication for CLI/web interface
+- Secure multi-user support
+
+## Deployment Considerations
+
+### Local Development
+- Docker containerization
+- Development environment setup
+- Hot reloading for rapid iteration
+
+### Production Deployment
+- Cloud hosting options (AWS, GCP, Azure)
+- Environment-specific configurations
+- Monitoring and alerting setup
+
+### Scaling
+- Multi-user support architecture
+- Database optimization
+- Caching strategies
+
+## Code Quality Standards
+
+### LangChain Best Practices
+- Proper tool definition and documentation
+- Error handling in agent workflows
+- Memory management for long conversations
+- Token usage optimization
+
+### Integration Patterns
+- Clean separation between agents and tools
+- Consistent error handling across components
+- Proper logging for debugging and monitoring
+- Modular design for easy extension
+
+### Performance Optimization
+- Efficient Notion API usage
+- Caching frequently accessed data
+- Async operations where appropriate
+- Minimal OpenAI token consumption
+
+Remember: This project combines AI intelligence with productivity management. Focus on creating intuitive, reliable agents that genuinely improve user productivity while maintaining data security and system reliability.

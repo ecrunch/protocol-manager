@@ -34,7 +34,7 @@ class NotionClient:
     Example:
         Basic usage with integration token:
         
-        >>> client = NotionClient(auth_token="secret_...")
+        >>> client = NotionClient(auth_token="ntn_...")
         >>> page = client.pages.retrieve("page_id")
         >>> databases = client.search.search_databases("My Database")
         
